@@ -6,7 +6,7 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var hike = require('.routes/hike');
+var hike = require('./routes/hike');
 
 var app = express();
 app.get('/hikes', hike.index);
