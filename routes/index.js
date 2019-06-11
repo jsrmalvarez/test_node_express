@@ -53,11 +53,12 @@ function describe_table(db, table_name, callback){
     db.describeTable({TableName:table_name}, callback);
 }
 
+var chats_item_count = -1;
+var users_item_count = -1;
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
 
-  var chats_item_count = -1;
-  var users_item_count = -1;
 
 
   describe_table(dynamodb, CHATS_TABLE_NAME,
@@ -83,6 +84,15 @@ router.get('/', function(req, res, next) {
         }
       });
 
+});
+
+router.post('/', function(req, res){
+  update_log(false, req.body.username);
+  update_log(false, req.body.password);
+  res.render('index', { title: 'Express',
+                        chats: chats_item_count,
+                        users: users_item_count,
+                        log:log});
 });
 
 module.exports = router;
