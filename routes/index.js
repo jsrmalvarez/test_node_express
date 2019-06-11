@@ -33,10 +33,7 @@ else{
 
 var dynamodb = new AWS.DynamoDB();
 
-
-var log = "";
-
-function update_log(err, data){
+function update_log(log, err, data){
   if(err){ 
    log = log + `DBG: Error: ${JSON.stringify(err, null, 2)}\n`
   }
@@ -45,33 +42,35 @@ function update_log(err, data){
   }
 }
 
-update_log(false, {running_on_aws: RUNNING_ON_AWS});
-update_log(false, {chats_table_name : CHATS_TABLE_NAME});
-update_log(false, {users_table_name : USERS_TABLE_NAME});
 
 function describe_table(db, table_name, callback){
     db.describeTable({TableName:table_name}, callback);
 }
 
-var chats_item_count = -1;
-var users_item_count = -1;
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
 
+  var log = "";
+  var chats_item_count = -1;
+  var users_item_count = -1;
+
+  update_log(log, false, {running_on_aws: RUNNING_ON_AWS});
+  update_log(log, false, {chats_table_name : CHATS_TABLE_NAME});
+  update_log(log, false, {users_table_name : USERS_TABLE_NAME});
 
 
   describe_table(dynamodb, CHATS_TABLE_NAME,
       function(err, data){
         if(err){
-          update_log(err, data);
+          update_log(log, err, data);
         }
         else{
           chats_item_count = data.Table.ItemCount;
           describe_table(dynamodb, USERS_TABLE_NAME,
               function(err, data){
                 if(err){
-                  update_log(err, data);
+                  update_log(log, err, data);
                 }
                 else{
                   users_item_count = data.Table.ItemCount;
@@ -87,11 +86,12 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/', function(req, res){
-  update_log(false, req.body.username);
-  update_log(false, req.body.password);
+  var log = "";
+  update_log(log, false, req.body.username);
+  update_log(log, false, req.body.password);
   res.render('index', { title: 'Express',
-                        chats: chats_item_count,
-                        users: users_item_count,
+                        chats: 'unknown',
+                        users: 'unknown',
                         log:log});
 });
 
