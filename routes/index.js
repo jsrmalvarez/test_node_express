@@ -63,14 +63,14 @@ router.get('/', function(req, res, next) {
   describe_table(dynamodb, CHATS_TABLE_NAME,
       function(err, data){
         if(err){
-          update_log(log, err, data);
+          log = log + `DBG: Error: ${JSON.stringify(err, null, 2)}\n`
         }
         else{
           chats_item_count = data.Table.ItemCount;
           describe_table(dynamodb, USERS_TABLE_NAME,
               function(err, data){
                 if(err){
-                  update_log(log, err, data);
+                  log = log + `DBG: Error: ${JSON.stringify(err, null, 2)}\n`
                 }
                 else{
                   users_item_count = data.Table.ItemCount;
@@ -87,8 +87,8 @@ router.get('/', function(req, res, next) {
 
 router.post('/', function(req, res){
   var log = "";
-  update_log(log, false, req.body.username);
-  update_log(log, false, req.body.password);
+  log = log + `DBG OK: ${JSON.stringify(req.body.username, null, 2)}\n`
+  log = log + `DBG OK: ${JSON.stringify(req.body.password, null, 2)}\n`
   res.render('index', { title: 'Express',
                         chats: 'unknown',
                         users: 'unknown',
