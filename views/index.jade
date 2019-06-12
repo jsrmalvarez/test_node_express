@@ -13,6 +13,8 @@ block content
       input(type="password", name="password")
     div.actions
       input(type="submit", value="Create New User")
+    
+    input(type="hidden", name="cmd", value="new_user")
 
   p Chats: #{chats}
   p Users: #{users}

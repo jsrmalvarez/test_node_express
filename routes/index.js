@@ -1,37 +1,9 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
 var AWS = require("aws-sdk");
+var my_config = require("../my_config");
+var users_api = require("../users_api");
 
-const RUNNING_ON_AWS = process.env.RUNNING_ON_AWS ? true : false;
-
-var CHATS_TABLE_NAME;
-var USERS_TABLE_NAME;
-
-if(RUNNING_ON_AWS){
-  CHATS_TABLE_NAME = process.env.CHATS_TABLE;
-  USERS_TABLE_NAME = process.env.USERS_TABLE;
-}
-else{
-  CHATS_TABLE_NAME = "Chats";
-  USERS_TABLE_NAME = "Users";
-}
-
-
-if(RUNNING_ON_AWS){
-  AWS.config.update({
-    region: "eu-west-3",
-  });
-}
-else{
-  AWS.config.update({
-    region: "eu-west-3",
-    endpoint: "http://localhost:8000",
-    accessKeyId: 'cacafuti',
-    secretAccessKey: 'cacafuti'
-  });
-}
-
-var dynamodb = new AWS.DynamoDB();
 
 function update_log(log, err, data){
   if(err){ 
@@ -43,15 +15,15 @@ function update_log(log, err, data){
 }
 
 
-function describe_table(db, table_name, callback){
+/*function describe_table(db, table_name, callback){
     db.describeTable({TableName:table_name}, callback);
-}
+}*/
 
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
 
-  var log = "";
+/*  var log = "";
   var chats_item_count = -1;
   var users_item_count = -1;
 
@@ -81,18 +53,35 @@ router.get('/', function(req, res, next) {
                 }
               });
         }
-      });
+      });*/
+      res.render('index', {title: 'Express'});
 
 });
 
 router.post('/', function(req, res){
-  var log = "";
-  log = log + `DBG OK: ${JSON.stringify(req.body.username, null, 2)}\n`
-  log = log + `DBG OK: ${JSON.stringify(req.body.password, null, 2)}\n`
+  /*var log = "";
+  log = log + `DBG OK: ${JSON.stringify(req.body.username, null, 2)}\n`;
+  log = log + `DBG OK: ${JSON.stringify(req.body.password, null, 2)}\n`;
   res.render('index', { title: 'Express',
                         chats: 'unknown',
                         users: 'unknown',
                         log:log});
+  */
+
+  var log = "";
+  if(req.body.cmd == 'new_user'){
+    users_api.create_new_user(req.body.username,
+                    req.body.password,
+                    function(err, msg){
+                      if(err){
+                        log = msg;
+                      }
+                      else{
+                        log = msg;
+                      }
+                      res.render('index', {title: 'Express', log:log})
+                    });
+  }
 });
 
 module.exports = router;
