@@ -48,38 +48,75 @@ var password = process.argv[3];
 */
 
 
-function create_new_user(username, password, callback){
+function create_new_user(email, password, callback){
   var creation_date = new Date().getTime();
-  var uuid = UUID(username + '@' + my_config.DOMAIN, UUID.DNS);
-  password = SHA1(password + username + creation_date);
+  var uuid = UUID(email + '@' + my_config.DOMAIN, UUID.DNS);
+  password = SHA1(password + email + creation_date);
 
   var params = {
       TableName:USERS_TABLE_NAME,
       Item:{
-          "username": username,
+          "email": email,
           "password": password,
           "uuid": uuid,
           "creation_date": creation_date,
           "chats": []
       },
-      ConditionExpression: "attribute_not_exists(username)"
+      ConditionExpression: "attribute_not_exists(email)"
   };
 
   docClient.put(params, function(err, data) {
       if (err) {
           if(err.code == "ConditionalCheckFailedException"){
-            callback(true, `User ${username} already exists.`);
+            callback(true, `User ${email} already exists.`);
           }
           else{
             callback(true, `Unable to add user.`);
           }
       }
       else {
-        callback(false, `User ${username} sucessfully created.`);
+        callback(false, `User ${email} sucessfully created.`);
+      }
+  });
+}
+
+function try_login(email, password, callback){
+
+  var params = {
+      TableName:"Users",
+      Key:{
+          "email": email
+      }
+  };
+
+  docClient.get(params, function(err, data) {
+      if (err) {
+        callback(true, 'Error while trying to log in');
+      } else {
+        var login_ok = false;
+        if(Object.getOwnPropertyNames(data).length > 0
+          && data.Item
+          && data.Item.password
+          && data.Item.creation_date){
+          const hashed_password = data.Item.password;
+          const creation_date = data.Item.creation_date;
+          const calculated_hash = SHA1(password + email + creation_date);
+          if(calculated_hash ==  hashed_password){
+            login_ok = true;
+          }
+        }
+
+        if(login_ok){
+          callback(false, 'Successful login.') ;
+        }
+        else{
+          callback(false, 'Unsuccessful login.') ;
+        }
       }
   });
 }
 
 module.exports = {
-  create_new_user: create_new_user
+  create_new_user: create_new_user,
+  try_login: try_login
 };

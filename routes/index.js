@@ -69,8 +69,21 @@ router.post('/', function(req, res){
   */
 
   var log = "";
-  if(req.body.cmd == 'new_user'){
+  if(req.body.new_user){
     users_api.create_new_user(req.body.username,
+                    req.body.password,
+                    function(err, msg){
+                      if(err){
+                        log = msg;
+                      }
+                      else{
+                        log = msg;
+                      }
+                      res.render('index', {title: 'Express', log:log})
+                    });
+  }
+  else if(req.body.login){
+    users_api.try_login(req.body.username,
                     req.body.password,
                     function(err, msg){
                       if(err){

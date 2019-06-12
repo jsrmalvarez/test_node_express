@@ -12,12 +12,8 @@ block content
       span.label Password
       input(type="password", name="password")
     div.actions
-      input(type="submit", value="Create New User")
-    
-    input(type="hidden", name="cmd", value="new_user")
+      input(type="submit", name="new_user" value="Create New User")
+      input(type="submit", name="login" value="Login")
 
-  p Chats: #{chats}
-  p Users: #{users}
-  
   p Log:
   pre #{log}
