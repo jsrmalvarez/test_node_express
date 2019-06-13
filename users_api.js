@@ -2,15 +2,18 @@ var my_config = require("./my_config");
 const UUID = require("uuid/v5");
 var AWS = require("aws-sdk");
 var SHA1 = require("sha1");
+var util = require("util");
 
 const RUNNING_ON_AWS = process.env.RUNNING_ON_AWS ? true : false;
 
 var CHATS_TABLE_NAME;
 var USERS_TABLE_NAME;
+var USERS_TABLE_EMAIL_INDEX_NAME; 
 
 if(RUNNING_ON_AWS){
   CHATS_TABLE_NAME = process.env.CHATS_TABLE;
   USERS_TABLE_NAME = process.env.USERS_TABLE;
+  USERS_TABLE_EMAIL_INDEX_NAME = process.env.USERS_TABLE_EMAIL_INDEX;
 }
 else{
   CHATS_TABLE_NAME = "Chats";
@@ -83,23 +86,33 @@ function create_new_user(email, password, callback){
 function try_login(email, password, callback){
 
   var params = {
-      TableName:"Users",
-      Key:{
-          "email": email
-      }
+      TableName:USERS_TABLE_NAME,
+      IndexName:USERS_TABLE_EMAIL_INDEX_NAME, 
+      KeyConditionExpression: 'email = :email',
+      ExpressionAttributeValues: {
+        ':email': email,
+      },
+      Limit: 1
   };
 
-  docClient.get(params, function(err, data) {
+  docClient.query(params, function(err, data) {
+/*        if(err){
+          callback(true, 'Error while trying to log in' + '\n' + util.inspect(err) );
+        }
+        else{
+          callback(true, 'Error while trying to log in' + '\n' + util.inspect(data) );
+        }*/
       if (err) {
-        callback(true, 'Error while trying to log in');
+        callback(true, 'Error while trying to log in' + '\n' + util.inspect(err) );
       } else {
         var login_ok = false;
         if(Object.getOwnPropertyNames(data).length > 0
-          && data.Item
-          && data.Item.password
-          && data.Item.creation_date){
-          const hashed_password = data.Item.password;
-          const creation_date = data.Item.creation_date;
+          && data.Items
+          && data.Items.length > 0
+          && data.Items[0].password
+          && data.Items[0].creation_date){
+          const hashed_password = data.Items[0].password;
+          const creation_date = data.Items[0].creation_date;
           const calculated_hash = SHA1(password + email + creation_date);
           if(calculated_hash ==  hashed_password){
             login_ok = true;
