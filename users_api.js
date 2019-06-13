@@ -110,21 +110,22 @@ function try_login(email, password, callback){
           && data.Items
           && data.Items.length > 0
           && data.Items[0].password
+          && data.Items[0].uuid
           && data.Items[0].creation_date){
           const hashed_password = data.Items[0].password;
           const creation_date = data.Items[0].creation_date;
           const calculated_hash = SHA1(password + email + creation_date);
           if(calculated_hash ==  hashed_password){
-            login_ok = true;
+            // Login OK
+            var uuid = data.Items[0].uuid;
+            callback(false, {login_ok: true, email:email, uuid:uuid});
+          }
+          else{
+            // Login KO
+            callback(false, {login_ok: false});
           }
         }
 
-        if(login_ok){
-          callback(false, 'Successful login.') ;
-        }
-        else{
-          callback(false, 'Unsuccessful login.') ;
-        }
       }
   });
 }
