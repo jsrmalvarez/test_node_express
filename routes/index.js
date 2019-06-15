@@ -1,10 +1,33 @@
-var express = require("express");
-var router = express.Router();
-var AWS = require("aws-sdk");
-var my_config = require("../my_config");
-var users_api = require("../users_api");
-var util = require('util');
+const express = require("express");
+const router = express.Router();
+const AWS = require("aws-sdk");
+const my_config = require("../my_config");
+const users_api = require("../users_api");
+const util = require('util');
+const passport = require('passport')
+  , LocalStrategy = require('passport-local').Strategy;
 
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    /*User.findOne({ username: username }, function(err, user) {
+      if (err) { return done(err); }
+      if (!user || !user.validPassword(password)){
+        return done(null, false, { message: 'Login unsuccessful' });
+      }
+      return done(null, user);
+    });*/
+    return done(null, {username: username});
+  }
+));
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
 
 function update_log(log, err, data){
   if(err){ 
@@ -26,7 +49,8 @@ router.get('/', function(req, res, next) {
   res.render('index', {title: 'Express'});
 });
 
-router.post('/', function(req, res){
+
+router.post('/', function(req, res, next){
 
   var log = "";
   if(req.body.new_user){
@@ -43,7 +67,10 @@ router.post('/', function(req, res){
                     });
   }
   else if(req.body.login){
-    users_api.try_login(req.body.username,
+    passport.authenticate('local', { successRedirect: `/user_page?username=${req.body.password}`,
+                                   failureRedirect: '/',
+                                   failureFlash: true})(req, res, next);
+/*    users_api.try_login(req.body.username,
                     req.body.password,
                     function(err, data){
                       if(err){
@@ -60,7 +87,7 @@ router.post('/', function(req, res){
                           res.render('index', {title: 'Express', log:log})
                         }
                       }
-                    });
+                    });*/
   }
 });
 

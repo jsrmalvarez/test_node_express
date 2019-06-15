@@ -22,8 +22,13 @@ function update_log(log, err, data){
 
 
 /* GET home page. */
-router.get('/user_page', function(req, res, next) {
-  res.render('user_page', {username: 'you are NOT LOGGED IN'});
+router.get('/', function(req, res, next) {
+  if(req.query.username){
+    res.render('user_page', {username: req.query.username});
+  }
+  else{
+    res.render('user_page', {username: 'you are NOT LOGGED IN'});
+  }
 });
 
 
