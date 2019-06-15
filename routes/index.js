@@ -10,14 +10,33 @@ const passport = require('passport')
 
 passport.use(new LocalStrategy(
   function(username, password, done) {
-    /*User.findOne({ username: username }, function(err, user) {
+    users_api.try_login(username, password,
+      function(err, data){
+        if(err){
+          //log = util.inspect(data);
+          //res.render('index', {title: 'Express', log:log})
+          return done(err);
+        }
+        else{
+          if(data.login_ok){
+            //log = '';
+            //res.render('user_page', {username: data.email, log:log})
+            return done(null, {username: username}, {message:'Login sucessful'});
+          }
+          else{
+            //log = 'Unsuccessful login';
+            //res.render('index', {title: 'Express', log:log})
+            return done(null, false, { message: 'Login unsuccessful' });
+          }
+        }
+      });
+/*User.findOne({ username: username }, function(err, user) {
       if (err) { return done(err); }
       if (!user || !user.validPassword(password)){
         return done(null, false, { message: 'Login unsuccessful' });
       }
       return done(null, user);
     });*/
-    return done(null, {username: username});
   }
 ));
 
@@ -67,9 +86,9 @@ router.post('/', function(req, res, next){
                     });
   }
   else if(req.body.login){
-    passport.authenticate('local', { successRedirect: `/user_page?username=${req.body.password}`,
+    passport.authenticate('local', { successRedirect: `/user_page?username=${req.body.username}`,
                                    failureRedirect: '/',
-                                   failureFlash: true})(req, res, next);
+                                   failureFlash: false})(req, res, next);
 /*    users_api.try_login(req.body.username,
                     req.body.password,
                     function(err, data){
