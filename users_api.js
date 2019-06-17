@@ -104,7 +104,8 @@ function try_login(email, password, callback){
         }*/
       if (err) {
         callback(true, 'Error while trying to log in' + '\n' + util.inspect(err) );
-      } else {
+      }
+      else {
         var login_ok = false;
         if(Object.getOwnPropertyNames(data).length > 0
           && data.Items
@@ -125,7 +126,10 @@ function try_login(email, password, callback){
             callback(false, {login_ok: false});
           }
         }
-
+        else{
+          // Login KO
+          callback(false, {login_ok: false});
+        }
       }
   });
 }
