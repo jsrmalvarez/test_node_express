@@ -133,8 +133,38 @@ function try_login(email, password, callback){
       }
   });
 }
+function find_by_uuid(uuid, callback){
+
+  var params = {
+      TableName:USERS_TABLE_NAME,
+      Key:{
+          "uuid": uuid,
+      }
+  };
+
+  docClient.get(params, function(err, data) {
+      if (err) {
+        callback(true, 'Error while finding user' + '\n' + util.inspect(err) );
+      }
+      else {
+        var login_ok = false;
+        if(Object.getOwnPropertyNames(data).length > 0
+          && data.Item
+          && data.Item.email
+          && data.Item.uuid){
+          var uuid = data.Item.uuid;
+          var email = data.Item.email;
+          callback(false, {user_found: true, user:{email:email, uuid:uuid}});
+        }
+        else{
+          callback(false, {user_found: false});
+        }
+      }
+  });
+}
 
 module.exports = {
   create_new_user: create_new_user,
-  try_login: try_login
+  try_login: try_login,
+  find_by_uuid : find_by_uuid
 };
