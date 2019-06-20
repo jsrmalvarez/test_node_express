@@ -12,9 +12,7 @@ var withoutdb = false;
 passport.use(new LocalStrategy(
   function(username, password, done) {
     if(withoutdb){
-      console.log('verify');
-      //done(null, {username: {user_found: true, user:{email:username, uuid:25}}});
-      done(null, {user_found: true, user:{email:username, uuid:25}});
+      done(null, {email:username, uuid:25});
     }
     else{
     users_api.try_login(username, password,
@@ -28,8 +26,7 @@ passport.use(new LocalStrategy(
           if(data.login_ok){
             //log = '';
             //res.render('user_page', {username: data.email, log:log})
-            return done(null, {user_found: true, user:{email:data.email, uuid:data.uuid}});
-            return done(null, {username: data}, {message:'Login sucessful'});
+            return done(null, {email:data.email, uuid:data.uuid});
           }
           else{
             //log = 'Unsuccessful login';
@@ -42,27 +39,29 @@ passport.use(new LocalStrategy(
   }
 ));
 
-passport.serializeUser(function(data, done) {
-  console.log('serialize');
-  //console.log(util.inspect(data));
-  done(null, data.user.uuid);
+passport.serializeUser(function(user, done) {
+  done(null, user.uuid);
 });
 
 passport.deserializeUser(function(uuid, done) {
-  console.log('deserialze');
-  users_api.find_by_uuid(uuid, function(err, data){
-    if(err){
-      done(err);
-    }
-    else{
-      if(data.user_found){
-          done(null, data.user);
+  if(withoutdb){
+    done(null, {email:'alice@bla.com', uuid:25});
+  }
+  else{
+    users_api.find_by_uuid(uuid, function(err, data){
+      if(err){
+        done(err);
       }
       else{
-        done('dserror');
+        if(data.user_found){
+            done(null, data.user);
+        }
+        else{
+          done('dserror');
+        }
       }
-    }
-  });
+    });
+  }
 });
 
 function update_log(log, err, data){
@@ -102,17 +101,18 @@ router.post('/', function(req, res, next){
                     });
   }
   else if(req.body.login){
-    console.log('req login');
-    console.log(util.inspect(req.body.username));
-    passport.authenticate('local', { /*successRedirect: `/user_page?username=${req.body.username.email}&uuid=${req.body.username.uuid}`,*/
+    passport.authenticate('local', {successRedirect: `/user_page`,
                                    failureRedirect: '/',
-                                   failureFlash: false},
-                                   function(user, info){
-                                     console.log('callback');
-                                     console.log(util.inspect(user));
-                                     console.log(util.inspect(info));
-                                     res.redirect(`/user_page?username=${info.user.email}&uuid=${info.user.uuid}`);
-                                   })(req, res, next);
+                                   failureFlash: false}/*,
+                                     function(user, info){
+                                     req.logIn(info.user, function(err){
+                                       if(err){return next(err);}
+                                       else{
+                                         return res.redirect(`/user_page?username=${info.user.email}&uuid=${info.user.uuid}`);
+
+                                       }
+                                     });
+                                      }*/)(req, res, next);
 /*    users_api.try_login(req.body.username,
                     req.body.password,
                     function(err, data){

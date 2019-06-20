@@ -23,11 +23,12 @@ function update_log(log, err, data){
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  if(req.query.username){
-    res.render('user_page', {username: req.query.username});
+  if(req.user){
+    res.render('user_page', {username: req.user.email});
   }
   else{
-    res.render('user_page', {username: 'you are NOT LOGGED IN'});
+    //res.render('user_page', {username: 'you are NOT LOGGED IN'});
+    res.redirect('/');
   }
 });
 

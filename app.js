@@ -1,5 +1,6 @@
 const createError = require('http-errors');
 const express = require('express');
+const session = require('express-session');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -11,11 +12,14 @@ var userPageRouter = require('./routes/user_page');
 
 var app = express();
 
-/*app.use(session({
+app.use(session({
   secret: 'afaeeabvkfaef88fea',
   resave: false,
-  saveUninitialized: false
-}));*/
+  saveUninitialized: false,
+  cookie:{
+    secure:false
+  }
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 
