@@ -81,7 +81,7 @@ function update_log(log, err, data){
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', {title: 'Express'});
+  res.render('index', {title: 'Ideacasa'});
 });
 
 
