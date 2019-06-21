@@ -1,9 +1,23 @@
 extends layout
 
 block content
-  p Welcome #{username}
-  div
+  div.top
+    p Welcome #{username}
     a(href="/user_page/logout") Log out
 
-  p Log:
-  pre #{log}
+  div.wrapper
+    nav(id="sidebar")
+      div.sidebar-header
+        h3 Dashboard
+
+        ul.list-unstyled_components
+          li Comp1
+          li Comp2
+          li Comp3
+
+    div(id="content")
+      p Log:
+      pre #{log}
+
+  div.footer
+    label.span3 Copyright jsrmalvarez@ninjatic.engineer
