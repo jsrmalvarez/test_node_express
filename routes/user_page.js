@@ -35,8 +35,15 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/load_conv', function(req, res, next){
-  console.log(util.inspect(req));
-  res.send('blah');
+  users_api.get_conversation(req.query.uuid1,
+                             req.query.uuid2,
+                             req.query.timestamp,
+                             function(err, data){
+    if(!err){
+      res.send(data);
+    }
+  });
+  
 });
 
 router.get('/logout', function(req, res){

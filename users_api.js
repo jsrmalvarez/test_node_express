@@ -168,9 +168,50 @@ function find_by_uuid(uuid, callback){
   });
 }
 
+
+function generate_parts_key(uuid1, uuid2){
+  var num = 
+    uuid1.localeCompare(uuid2, 'us', {numeric:true, caseFirst:false});
+
+  if(num <= 0){
+    return uuid1 + '_' + uuid2;
+  }
+  else{
+    return uuid2 + '_' + uuid1;
+  }
+}
+
+function get_conversation(uuid1, uuid2, timestamp, callback){
+
+  var params = {
+    TableName:CHATS_TABLE_NAME,
+    KeyConditionExpression: "#parts = :parts_key and #timestamp >= if_not_exists(#timestamp, 0):timestamp",
+    ExpressionAttributeNames:{
+      "#parts": "parts",
+      "#timestamp" : "timestamp"
+    },
+    ExpressionAttributeValues: {
+      ":parts_key": generate_parts_key(uuid1, uuid2),
+      ":timestamp": timestamp
+    },
+    Limit: 10,
+    ScanIndexForward: false    
+  };
+
+  docClient.query(params, function(err, data) {
+    if (err) {
+      callback(true, 'Error fetching conversation.' + '\n' + util.inspect(err) );
+    }
+    else {
+        callback(false, data);
+    }
+  });
+}
+
 module.exports = {
   create_new_user: create_new_user,
   try_login: try_login,
   find_by_uuid : find_by_uuid,
+  get_conversation: get_conversation,
   running_on_aws : RUNNING_ON_AWS
 };

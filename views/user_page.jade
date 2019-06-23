@@ -25,8 +25,7 @@ block content
                 li No contacts
           div.col-lg-6
             h3 Conversation:
-              each msg in contacts
-                p #{msg.text}
+              div(id="conversation")
               form.form-horizontal(name="/", method="post")
                   input(type="text", name="msg")
                   input.btn(type="submit", name="send_msg" value="Send")
