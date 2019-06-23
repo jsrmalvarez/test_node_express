@@ -7,7 +7,7 @@ const util = require('util');
 const passport = require('passport')
   , LocalStrategy = require('passport-local').Strategy;
 
-var withoutdb = false;
+var withoutdb = !users_api.running_on_aws;
 
 passport.use(new LocalStrategy(
   function(username, password, done) {
@@ -45,7 +45,12 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(uuid, done) {
   if(withoutdb){
-    done(null, {email:'alice@bla.com', uuid:25});
+    done(null, {email:'alice@bla.com',
+                uuid:'c17c2cc0-1ee1-5056-87c4-723de87ec8a5',
+                chats: [{uuid:'be977b4d-6cb7-50f2-989d-0a061e82cc57',
+                         email:'bob@bla.com'},
+                        {uuid:'b7c1649f-d336-5477-b5d4-37d3f4d91b35',
+                         email:'test@bla.com'}]});
   }
   else{
     users_api.find_by_uuid(uuid, function(err, data){

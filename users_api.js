@@ -151,10 +151,15 @@ function find_by_uuid(uuid, callback){
         if(Object.getOwnPropertyNames(data).length > 0
           && data.Item
           && data.Item.email
-          && data.Item.uuid){
+          && data.Item.uuid
+          && data.Item.chats){
           var uuid = data.Item.uuid;
           var email = data.Item.email;
-          callback(false, {user_found: true, user:{email:email, uuid:uuid}});
+          var chats = data.Item.chats;
+          callback(false, {user_found: true,
+                           user: {email:email,
+                                  uuid:uuid,
+                                  chats:chats}});
         }
         else{
           callback(false, {user_found: false});
@@ -166,5 +171,6 @@ function find_by_uuid(uuid, callback){
 module.exports = {
   create_new_user: create_new_user,
   try_login: try_login,
-  find_by_uuid : find_by_uuid
+  find_by_uuid : find_by_uuid,
+  running_on_aws : RUNNING_ON_AWS
 };

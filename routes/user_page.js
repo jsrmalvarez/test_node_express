@@ -24,12 +24,19 @@ function update_log(log, err, data){
 /* GET home page. */
 router.get('/', function(req, res, next) {
   if(req.user){
-    res.render('user_page', {username: req.user.email});
+    res.render('user_page', {username: req.user.email,
+                             uuid: req.user.uuid,
+                             contacts: req.user.chats});
   }
   else{
     //res.render('user_page', {username: 'you are NOT LOGGED IN'});
     res.redirect('/');
   }
+});
+
+router.get('/load_conv', function(req, res, next){
+  console.log(util.inspect(req));
+  res.send('blah');
 });
 
 router.get('/logout', function(req, res){

@@ -5,19 +5,31 @@ block content
     p Welcome #{username}
     a(href="/user_page/logout") Log out
 
-  div.wrapper
-    nav(id="sidebar")
-      div.sidebar-header
-        h3 Dashboard
+  div(id="wrapper")
+    div(id="sidebar-wrapper")
+      ul.sidebar-nav
+        li Comp1
+        li Comp2
+        li Comp3
 
-        ul.list-unstyled_components
-          li Comp1
-          li Comp2
-          li Comp3
-
-    div(id="content")
-      p Log:
-      pre #{log}
+    div(id="page-content-wrapper")
+      div.container-fluid
+        div.row
+          div.col-lg-6
+            h3 Contacts:
+            ul.list-unstyled_components
+              each contact in contacts
+                li
+                  a(href="#" onclick="load_conv('#{uuid}', '#{contact.uuid}')") #{contact.email}
+              else
+                li No contacts
+          div.col-lg-6
+            h3 Conversation:
+              each msg in contacts
+                p #{msg.text}
+              form.form-horizontal(name="/", method="post")
+                  input(type="text", name="msg")
+                  input.btn(type="submit", name="send_msg" value="Send")
 
   div.footer
     label.span3 Copyright jsrmalvarez@ninjatic.engineer
