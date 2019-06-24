@@ -155,11 +155,11 @@ function find_by_uuid(uuid, callback){
           && data.Item.chats){
           var uuid = data.Item.uuid;
           var email = data.Item.email;
-          var chats = data.Item.chats;
+          var contacts = data.Item.contacts;
           callback(false, {user_found: true,
                            user: {email:email,
                                   uuid:uuid,
-                                  chats:chats}});
+                                  contacts:contacts}});
         }
         else{
           callback(false, {user_found: false});
@@ -183,16 +183,18 @@ function generate_parts_key(uuid1, uuid2){
 
 function get_conversation(uuid1, uuid2, timestamp, callback){
 
+  var parts = generate_parts_key(uuid1, uuid2);
+
   var params = {
     TableName:CHATS_TABLE_NAME,
-    KeyConditionExpression: "#parts = :parts_key and #timestamp >= if_not_exists(#timestamp, 0):timestamp",
+    KeyConditionExpression: "#parts = :parts_key and #timestamp >= :timestamp",
     ExpressionAttributeNames:{
       "#parts": "parts",
       "#timestamp" : "timestamp"
     },
     ExpressionAttributeValues: {
-      ":parts_key": generate_parts_key(uuid1, uuid2),
-      ":timestamp": timestamp
+      ":parts_key": parts,
+      ":timestamp": (timestamp ? timestamp : 0)
     },
     Limit: 10,
     ScanIndexForward: false    
@@ -203,15 +205,77 @@ function get_conversation(uuid1, uuid2, timestamp, callback){
       callback(true, 'Error fetching conversation.' + '\n' + util.inspect(err) );
     }
     else {
-        callback(false, data);
+      if(data.Items){
+        var messages = [];
+        data.Items.forEach(function(item){
+          messages.append({timestamp: item.timestamp, text: item.text});
+        });
+        callback(false, {parts:parts, messages:messages});
+      }
+      else{
+        callback(true, 'Error processing conversation.');
+      }
     }
   });
 }
+
+function send_message(sender, parts, message, callback){
+  const timestamp = new Date().getTime();
+
+  // Update all non-sender parts so they
+  // have the sender as contact
+  // (sender already knows the other parts)
+  // jsrmalvarez: TODO: optimize
+  parts.forEach(function(part){
+    if(part != sender){
+      var update_params = {
+          Key: part,
+          TableName: USERS_TABLE_NAME,
+          UpdateExpression:
+            'set #contacts = list_append(if_not_exists(#contacts, :empty_list), :new_contact)',
+          ConditionExpression:
+            'not contains(#contacts, :new_contact_str)',
+          ExpressionAttributeNames: {
+            '#contacts': 'contacts'
+          },
+          ExpressionAttributeValues: {
+            ':new_contact': [sender],
+            ':new_contact_str': sender,
+            ':empty_list': []
+          },
+      };
+
+      docClient.update(update_params, function(err, data) {
+          if (err) {
+            //jsrmalvarez TODO
+          } 
+      });
+    }
+  });
+
+  // Record new message
+  var params = {
+    TableName: CHATS_TABLE_NAME,
+    Item:{
+      "parts" : parts,
+      "sender" : sender,
+      "message" : message,
+      "timestamp": timestamp
+    }
+  };
+
+
+  docClient.put(params, function(err, data) {
+    callback(err, data);
+  });
+}
+
 
 module.exports = {
   create_new_user: create_new_user,
   try_login: try_login,
   find_by_uuid : find_by_uuid,
   get_conversation: get_conversation,
+  send_message: send_message,
   running_on_aws : RUNNING_ON_AWS
 };

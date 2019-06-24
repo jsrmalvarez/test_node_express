@@ -47,7 +47,7 @@ passport.deserializeUser(function(uuid, done) {
   if(withoutdb){
     done(null, {email:'alice@bla.com',
                 uuid:'c17c2cc0-1ee1-5056-87c4-723de87ec8a5',
-                chats: [{uuid:'be977b4d-6cb7-50f2-989d-0a061e82cc57',
+                contacts: [{uuid:'be977b4d-6cb7-50f2-989d-0a061e82cc57',
                          email:'bob@bla.com'},
                         {uuid:'b7c1649f-d336-5477-b5d4-37d3f4d91b35',
                          email:'test@bla.com'}]});
@@ -86,7 +86,7 @@ function update_log(log, err, data){
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', {title: 'Ideacasa'});
+  res.render('index', {title: 'Tsting'});
 });
 
 

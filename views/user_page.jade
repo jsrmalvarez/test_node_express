@@ -26,9 +26,10 @@ block content
           div.col-lg-6
             h3 Conversation:
               div(id="conversation")
-              form.form-horizontal(name="/", method="post")
-                  input(type="text", name="msg")
-                  input.btn(type="submit", name="send_msg" value="Send")
+              form.form-horizontal(name="/" method="post" onsubmit="return false")
+                  input(type="text" name="intput_txt_msg" id="msg_txt_box")
+                  input.btn(type="submit" name="btn_send_msg" value="Send"
+                  onclick="send_msg('#{uuid}')")
 
   div.footer
     label.span3 Copyright jsrmalvarez@ninjatic.engineer

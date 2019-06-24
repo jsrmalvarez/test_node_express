@@ -26,7 +26,7 @@ router.get('/', function(req, res, next) {
   if(req.user){
     res.render('user_page', {username: req.user.email,
                              uuid: req.user.uuid,
-                             contacts: req.user.chats});
+                             contacts: req.user.contacts});
   }
   else{
     //res.render('user_page', {username: 'you are NOT LOGGED IN'});
@@ -39,11 +39,22 @@ router.get('/load_conv', function(req, res, next){
                              req.query.uuid2,
                              req.query.timestamp,
                              function(err, data){
-    if(!err){
-      res.send(data);
-    }
-  });
+                               res.send({error:err, data:data});
+                             });
   
+});
+
+router.post('/send_msg', function(req, res, next){
+  if(req.body.msg && req.body.parts){
+    var parts = req.body.parts;
+    var sender = req.body.sender;
+    var msg = req.body.msg;
+
+    users_api.send_message(sender_idx, parts, msg,
+                           function(err,data){
+                             res.send({error:err, data:data});
+                           });
+  }
 });
 
 router.get('/logout', function(req, res){
