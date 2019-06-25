@@ -133,6 +133,7 @@ function try_login(email, password, callback){
       }
   });
 }
+
 function find_by_uuid(uuid, callback){
 
   var params = {
@@ -152,7 +153,7 @@ function find_by_uuid(uuid, callback){
           && data.Item
           && data.Item.email
           && data.Item.uuid
-          && data.Item.chats){
+          && data.Item.contacts){
           var uuid = data.Item.uuid;
           var email = data.Item.email;
           var contacts = data.Item.contacts;
@@ -183,7 +184,8 @@ function generate_parts_key(uuid1, uuid2){
 
 function get_conversation(uuid1, uuid2, timestamp, callback){
 
-  var parts = generate_parts_key(uuid1, uuid2);
+  var parts = [uuid1, uuid2];
+  var key = generate_parts_key(uuid1, uuid2);
 
   var params = {
     TableName:CHATS_TABLE_NAME,
@@ -193,7 +195,7 @@ function get_conversation(uuid1, uuid2, timestamp, callback){
       "#timestamp" : "timestamp"
     },
     ExpressionAttributeValues: {
-      ":parts_key": parts,
+      ":parts_key": key,
       ":timestamp": (timestamp ? timestamp : 0)
     },
     Limit: 10,
@@ -208,7 +210,7 @@ function get_conversation(uuid1, uuid2, timestamp, callback){
       if(data.Items){
         var messages = [];
         data.Items.forEach(function(item){
-          messages.append({timestamp: item.timestamp, text: item.text});
+          messages.push({timestamp: item.timestamp, text: item.text});
         });
         callback(false, {parts:parts, messages:messages});
       }
@@ -219,8 +221,10 @@ function get_conversation(uuid1, uuid2, timestamp, callback){
   });
 }
 
-function send_message(sender, parts, message, callback){
+function send_message(sender, parts, text, callback){
   const timestamp = new Date().getTime();
+  var error_happened = false;
+  var error_msg = '';
 
   // Update all non-sender parts so they
   // have the sender as contact
@@ -228,6 +232,8 @@ function send_message(sender, parts, message, callback){
   // jsrmalvarez: TODO: optimize
   parts.forEach(function(part){
     if(part != sender){
+      console.log("-- Checking part:");
+      console.log(util.inspect(part));
       var update_params = {
           Key: part,
           TableName: USERS_TABLE_NAME,
@@ -247,27 +253,44 @@ function send_message(sender, parts, message, callback){
 
       docClient.update(update_params, function(err, data) {
           if (err) {
-            //jsrmalvarez TODO
+            error_happened = true;
+            error_msg = error_msg + JSON.stringify(data) + '\n';
           } 
+          
+          console.log("-- Data:");
+          console.log(util.inspect(data));
       });
     }
   });
 
-  // Record new message
-  var params = {
-    TableName: CHATS_TABLE_NAME,
-    Item:{
-      "parts" : parts,
-      "sender" : sender,
-      "message" : message,
-      "timestamp": timestamp
-    }
-  };
+  if(error_happened){
+    error_msg = 'Fist stage\n' + error_msg;
+    callback(true, error_msg);
+  }
+  else{
+    // Record new message
+    var key = generate_parts_key(parts[0], parts[1]);
+
+    var params = {
+      TableName: CHATS_TABLE_NAME,
+      Item:{
+        "parts" : key,
+        "timestamp": timestamp,
+        "sender" : sender,
+        "text" : text
+      }
+    };
 
 
-  docClient.put(params, function(err, data) {
-    callback(err, data);
-  });
+    docClient.put(params, function(err, data) {
+      if(err){
+        callback(true, data);
+      }
+      else{
+        callback(false, data);
+      }
+    });
+  }
 }
 
 

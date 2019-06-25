@@ -9,6 +9,13 @@ function display_conv(){
   }
 }
 
+function appendError(err){
+  $("#conversation" ).append(`<p>-- Error --</p>`);
+  if(err){
+    $("#conversation" ).append(`<p>${JSON.stringify(err)}</p>`);
+  }
+}
+
 function load_conv(uuid1, uuid2){
 
 /*  current_conversation = {parts: [uuid1, uuid2],
@@ -19,15 +26,21 @@ function load_conv(uuid1, uuid2){
   display_conv(current_conversation);
   return;*/
 
-  $.get( `/user_page/load_conv?uuid1=${uuid1}&uuid2=${uuid2}`, function(err,data) {
-    if(err){
-      $("#conversation" ).append(`<p>-- Error --</p>`);
-    }
-    else{
-      current_conversation = data;
-      display_conv(current_conversation);
-    }
-  });
+  $("#conversation").empty();
+  $("#conversation").show();
+  
+
+  $.get( `/user_page/load_conv?uuid1=${uuid1}&uuid2=${uuid2}`)
+       .done(function(response_data){
+                  if(response_data.error == false){
+                    current_conversation = response_data.data;
+                    display_conv(current_conversation);
+                  }
+                  else{
+                    appendError(response_data.data);
+                  }
+                })
+       .fail(function(jqXHR, textStatus, errorThrown) {appendError()});
 }
 
 
@@ -38,19 +51,18 @@ function send_msg(current_user){
     url: "/user_page/send_msg",
     data: JSON.stringify({ sender: current_user,
                            parts: current_conversation.parts,
-                           msg: $("#msg_txt_box").val()}),
+                           text: $("#msg_txt_box").val()}),
     contentType: "application/json; charset=utf-8",
-    dataType: "json"/*,
-    success: function(data){alert(data);},
-    failure: function(errMsg) {
-      alert(errMsg);
-    }*/
-  });
-
-/*  $.post('/user_page/send_msg',
-          current_conversation,
-          function(err,data){
-            alert($("#msg_txt_box").val());
-          });*/
-  }
-}
+    dataType: "json"})
+        .done(function(response_data){
+            if(response_data.error == false){
+              display_conv(current_conversation);
+            }
+            else{
+              appendError(response_data.data);
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {appendError()});
+  
+    }
+}    

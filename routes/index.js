@@ -108,34 +108,7 @@ router.post('/', function(req, res, next){
   else if(req.body.login){
     passport.authenticate('local', {successRedirect: `/user_page`,
                                    failureRedirect: '/',
-                                   failureFlash: false}/*,
-                                     function(user, info){
-                                     req.logIn(info.user, function(err){
-                                       if(err){return next(err);}
-                                       else{
-                                         return res.redirect(`/user_page?username=${info.user.email}&uuid=${info.user.uuid}`);
-
-                                       }
-                                     });
-                                      }*/)(req, res, next);
-/*    users_api.try_login(req.body.username,
-                    req.body.password,
-                    function(err, data){
-                      if(err){
-                        log = util.inspect(data);
-                        res.render('index', {title: 'Express', log:log})
-                      }
-                      else{
-                        if(data.login_ok){
-                          log = '';
-                          res.render('user_page', {username: data.email, log:log})
-                        }
-                        else{
-                          log = 'Unsuccessful login';
-                          res.render('index', {title: 'Express', log:log})
-                        }
-                      }
-                    });*/
+                                   failureFlash: false})(req, res, next);
   }
 });
 

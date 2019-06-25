@@ -23,7 +23,10 @@ function update_log(log, err, data){
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  if(req.user){
+  if(  req.user
+    && req.user.email
+    && req.user.uuid
+    && req.user.contacts){
     res.render('user_page', {username: req.user.email,
                              uuid: req.user.uuid,
                              contacts: req.user.contacts});
@@ -45,16 +48,21 @@ router.get('/load_conv', function(req, res, next){
 });
 
 router.post('/send_msg', function(req, res, next){
-  if(req.body.msg && req.body.parts){
+
+  if(   req.body.sender
+     && req.body.parts
+     && req.body.text){
     var parts = req.body.parts;
     var sender = req.body.sender;
-    var msg = req.body.msg;
+    var text = req.body.text;
 
-    users_api.send_message(sender_idx, parts, msg,
+    users_api.send_message(sender, parts, text,
                            function(err,data){
                              res.send({error:err, data:data});
                            });
   }
+
+  
 });
 
 router.get('/logout', function(req, res){
