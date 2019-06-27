@@ -6,7 +6,7 @@ function prepend_conv_msg(msg){
 }
 
 function append_conv_msg(msg){
-  $("#conversation" ).prepend(`<p>${msg.text}</p>`);
+  $("#conversation" ).append(`<p>${msg.text}</p>`);
 }
 
 function display_conv(conv){
