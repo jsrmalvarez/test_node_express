@@ -138,8 +138,9 @@ function find_by_uuid(uuid, callback){
 
   var params = {
       TableName:USERS_TABLE_NAME,
+      ProjectionExpression:'email,contacts',
       Key:{
-          "uuid": uuid,
+          "uuid": uuid
       }
   };
 
@@ -152,9 +153,7 @@ function find_by_uuid(uuid, callback){
         if(Object.getOwnPropertyNames(data).length > 0
           && data.Item
           && data.Item.email
-          && data.Item.uuid
           && data.Item.contacts){
-          var uuid = data.Item.uuid;
           var email = data.Item.email;
           var contacts = data.Item.contacts;
           callback(false, {user_found: true,
