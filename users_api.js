@@ -63,7 +63,7 @@ function create_new_user(email, password, callback){
           "password": password,
           "uuid": uuid,
           "creation_date": creation_date,
-          "chats": []
+          "contacts": []
       },
       ConditionExpression: "attribute_not_exists(email)"
   };
@@ -88,6 +88,7 @@ function try_login(email, password, callback){
   var params = {
       TableName:USERS_TABLE_NAME,
       IndexName:USERS_TABLE_EMAIL_INDEX_NAME, 
+      ProjectionExpression: "password, uuid, creation_date"
       KeyConditionExpression: 'email = :email',
       ExpressionAttributeValues: {
         ':email': email,
@@ -182,21 +183,19 @@ function generate_parts_key(uuid1, uuid2){
   }
 }
 
-function get_conversation(uuid1, uuid2, timestamp, callback){
+function get_conversation(uuid1, uuid2, callback){
 
   var parts = [uuid1, uuid2];
   var key = generate_parts_key(uuid1, uuid2);
 
   var params = {
     TableName:CHATS_TABLE_NAME,
-    KeyConditionExpression: "#parts = :parts_key and #timestamp >= :timestamp",
+    KeyConditionExpression: "#parts = :parts_key",
     ExpressionAttributeNames:{
       "#parts": "parts",
-      "#timestamp" : "timestamp"
     },
     ExpressionAttributeValues: {
       ":parts_key": key,
-      ":timestamp": (timestamp ? timestamp : 0)
     },
     Limit: 10,
     ScanIndexForward: false    
@@ -223,6 +222,8 @@ function get_conversation(uuid1, uuid2, timestamp, callback){
 
 function send_message(sender, parts, text, callback){
   const timestamp = new Date().getTime();
+
+/*  
   var error_happened = false;
   var error_msg = '';
 
@@ -230,10 +231,10 @@ function send_message(sender, parts, text, callback){
   // have the sender as contact
   // (sender already knows the other parts)
   // jsrmalvarez: TODO: optimize
+
   parts.forEach(function(part){
     if(part != sender){
-      console.log("-- Checking part:");
-      console.log(util.inspect(part));
+
       var update_params = {
           Key: part,
           TableName: USERS_TABLE_NAME,
@@ -254,43 +255,40 @@ function send_message(sender, parts, text, callback){
       docClient.update(update_params, function(err, data) {
           if (err) {
             error_happened = true;
-            error_msg = error_msg + JSON.stringify(data) + '\n';
+            error_msg = error_msg + JSON.stringify(err);
+            console.log(`-- Update error: ${error_msg}`);
           } 
-          
-          console.log("-- Data:");
-          console.log(util.inspect(data));
+          else{ 
+            console.log("-- Data:");
+            console.log(util.inspect(data));
+          }
       });
     }
   });
+*/
 
-  if(error_happened){
-    error_msg = 'Fist stage\n' + error_msg;
-    callback(true, error_msg);
-  }
-  else{
-    // Record new message
-    var key = generate_parts_key(parts[0], parts[1]);
+  // Record new message
+  var key = generate_parts_key(parts[0], parts[1]);
 
-    var params = {
-      TableName: CHATS_TABLE_NAME,
-      Item:{
-        "parts" : key,
-        "timestamp": timestamp,
-        "sender" : sender,
-        "text" : text
-      }
-    };
+  var params = {
+    TableName: CHATS_TABLE_NAME,
+    Item:{
+      "parts" : key,
+      "timestamp": timestamp,
+      "sender" : sender,
+      "text" : text
+    }
+  };
 
 
-    docClient.put(params, function(err, data) {
-      if(err){
-        callback(true, data);
-      }
-      else{
-        callback(false, data);
-      }
-    });
-  }
+  docClient.put(params, function(err, data) {
+    if(err){
+      callback(true, data);
+    }
+    else{
+      callback(false, data);
+    }
+  });
 }
 
 

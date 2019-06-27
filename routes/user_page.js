@@ -5,6 +5,7 @@ var my_config = require("../my_config");
 var users_api = require("../users_api");
 var util = require('util');
 
+var withoutdb = !users_api.running_on_aws;
 
 function update_log(log, err, data){
   if(err){ 
@@ -38,12 +39,21 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/load_conv', function(req, res, next){
+  if(withoutdb){
+    var msg1 = {timestamp:42, text:'Ladies and gentlemen of the jury exZIPIT A'};
+    var msg2 = {timestamp:42, text:'Sex at noon taxes'};
+    var messages = [msg1, msg2];
+    var data = {parts:[req.query.uuid1, req.query.uuid2], messages:messages};
+    res.send({error:false, data:data});
+  }
+  else{
   users_api.get_conversation(req.query.uuid1,
                              req.query.uuid2,
-                             req.query.timestamp,
+//                             req.query.timestamp,
                              function(err, data){
                                res.send({error:err, data:data});
                              });
+  }
   
 });
 
