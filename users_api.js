@@ -88,7 +88,6 @@ function try_login(email, password, callback){
   var params = {
       TableName:USERS_TABLE_NAME,
       IndexName:USERS_TABLE_EMAIL_INDEX_NAME, 
-      ProjectionExpression: "password, uuid, creation_date"
       KeyConditionExpression: 'email = :email',
       ExpressionAttributeValues: {
         ':email': email,

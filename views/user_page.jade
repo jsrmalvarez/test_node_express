@@ -25,11 +25,11 @@ block content
                 li No contacts
           div.col-lg-6
             h3 Conversation:
-              div(id="conversation" style="display:none")
+              div(id="conversation" style="display:none; font-size:medium")
               form.form-horizontal(name="/" method="post" onsubmit="return false")
-                  input(type="text" name="intput_txt_msg" id="msg_txt_box")
-                  input.btn(type="submit" name="btn_send_msg" value="Send"
-                  onclick="send_msg('#{uuid}')")
+                input(type="text" name="intput_txt_msg" id="msg_txt_box" style="font-size:medium")
+                input.btn(type="submit" name="btn_send_msg" value="Send"
+                onclick="send_msg('#{uuid}')")
 
   div.footer
     label.span3 Copyright jsrmalvarez@ninjatic.engineer
