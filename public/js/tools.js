@@ -1,19 +1,25 @@
 
 var current_conversation;
+var current_user;
 
-function prepend_conv_msg(msg){
-  $("#conversation" ).prepend(`<p>${msg.text}</p>`);
+function init_user_state(uuid){
+  current_user = uuid;
+  check_for_new_messages();
 }
 
-function append_conv_msg(msg){
-  $("#conversation" ).append(`<p>${msg.text}</p>`);
+function prepend_conv_msg(message_obj){
+  $("#conversation" ).prepend(`<p>${message_obj.msg.text}</p>`);
+}
+
+function append_conv_msg(message_obj){
+  $("#conversation" ).append(`<p>${message_obj.msg.text}</p>`);
 }
 
 function display_conv(conv){
   $("#conversation").empty();
   if(conv.messages){
-    conv.messages.forEach(function(msg){
-      prepend_conv_msg(msg);
+    conv.messages.forEach(function(message_obj){
+      prepend_conv_msg(message_obj);
     });
   }
   $("#conversation").show();
@@ -55,11 +61,11 @@ function load_conv(uuid1, uuid2){
 }
 
 
-function send_msg(current_user){
+function send_msg(){
   if(current_conversation){
     var new_msg = { sender: current_user,
                            parts: current_conversation.parts,
-                           text: $("#msg_txt_box").val()}
+                           msg: {text: $("#msg_txt_box").val()}}
     $.ajax({
       type: "POST",
       url: "/user_page/send_msg",
@@ -68,7 +74,6 @@ function send_msg(current_user){
       dataType: "json"})
           .done(function(response_data){
               if(response_data.error == false){
-                display_conv(current_conversation);
                 append_conv_msg(new_msg);
               }
               else{
@@ -79,3 +84,33 @@ function send_msg(current_user){
   
   }
 }    
+
+function process_new_messages(new_messages){
+  var count = new_messages.count;
+  var map = new_messages.map;
+  var more = new_messages.more;
+
+  if(count > 0){
+    $('#new_messages_notification').text(`You have ${more ? many : count} new messages`);
+  }
+  else{
+    $('#new_messages_notification').text(`You have no new messages`);
+  }
+}
+
+function check_for_new_messages(){
+  //process_new_messages([1,2,3,4,5,6]);
+  $.ajax({
+    type: 'POST',
+    url: 'user_page/check_for_new_msg',
+    data: JSON.stringify({uuid:current_user}),
+    dataType: 'json'});
+          .done(function(response_data){
+              if(response_data.error == false){
+                process_new_messages(response_data.data);
+              }
+              setTimeout(check_for_new_messages, 10000);
+          })
+          .fail(function(jqXHR, textStatus, errorThrown) {display_error()});
+          
+}

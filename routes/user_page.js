@@ -40,8 +40,8 @@ router.get('/', function(req, res, next) {
 
 router.get('/load_conv', function(req, res, next){
   if(withoutdb){
-    var msg1 = {timestamp:42, text:'Ladies and gentlemen of the jury exZIPIT A'};
-    var msg2 = {timestamp:42, text:'Sex at noon taxes'};
+    var msg1 = {timestamp:42, msg:{text:'Ladies and gentlemen of the jury exZIPIT A'}};
+    var msg2 = {timestamp:42, msg:{text:'Sex at noon taxes'}};
     var messages = [msg1, msg2];
     var data = {parts:[req.query.uuid1, req.query.uuid2], messages:messages};
     res.send({error:false, data:data});
@@ -49,7 +49,6 @@ router.get('/load_conv', function(req, res, next){
   else{
   users_api.get_conversation(req.query.uuid1,
                              req.query.uuid2,
-//                             req.query.timestamp,
                              function(err, data){
                                res.send({error:err, data:data});
                              });
@@ -67,6 +66,20 @@ router.post('/send_msg', function(req, res, next){
     var text = req.body.text;
 
     users_api.send_message(sender, parts, text,
+                           function(err,data){
+                             res.send({error:err, data:data});
+                           });
+  }
+
+  
+});
+
+router.post('/check_for_new_messages', function(req, res, next){
+
+  if(req.body.uuid){
+    var uuid = req.body.uuid;
+
+    users_api.check_for_new_messages(uuid,
                            function(err,data){
                              res.send({error:err, data:data});
                            });

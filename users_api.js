@@ -3,20 +3,22 @@ const UUID = require("uuid/v5");
 var AWS = require("aws-sdk");
 var SHA1 = require("sha1");
 var util = require("util");
+const crypto = require('crypto');
 
 const RUNNING_ON_AWS = process.env.RUNNING_ON_AWS ? true : false;
 
-var CHATS_TABLE_NAME;
+var MESSAGES_TABLE_NAME;
+var MESSAGES_TABLE_RECEIVER_INDEX;
 var USERS_TABLE_NAME;
 var USERS_TABLE_EMAIL_INDEX_NAME; 
 
 if(RUNNING_ON_AWS){
-  CHATS_TABLE_NAME = process.env.CHATS_TABLE;
+  MESSAGES_TABLE_NAME = process.env.MESSAGES_TABLE;
   USERS_TABLE_NAME = process.env.USERS_TABLE;
   USERS_TABLE_EMAIL_INDEX_NAME = process.env.USERS_TABLE_EMAIL_INDEX;
 }
 else{
-  CHATS_TABLE_NAME = "Chats";
+  MESSAGES_TABLE_NAME = "Messages";
   USERS_TABLE_NAME = "Users";
 }
 
@@ -174,10 +176,10 @@ function generate_parts_key(uuid1, uuid2){
     uuid1.localeCompare(uuid2, 'us', {numeric:true, caseFirst:false});
 
   if(num <= 0){
-    return uuid1 + '_' + uuid2;
+    return crypto.createHash('sha256').update(uuid1 + '_' + uuid2).digest("base64");
   }
   else{
-    return uuid2 + '_' + uuid1;
+    return crypto.createHash('sha256').update(uuid2 + '_' + uuid1).digest("base64");
   }
 }
 
@@ -187,10 +189,10 @@ function get_conversation(uuid1, uuid2, callback){
   var key = generate_parts_key(uuid1, uuid2);
 
   var params = {
-    TableName:CHATS_TABLE_NAME,
-    KeyConditionExpression: "#parts = :parts_key",
+    TableName:MESSAGES_TABLE_NAME,
+    KeyConditionExpression: "#uuid= :parts_key",
     ExpressionAttributeNames:{
-      "#parts": "parts",
+      "#uuid": "uuid",
     },
     ExpressionAttributeValues: {
       ":parts_key": key,
@@ -207,7 +209,10 @@ function get_conversation(uuid1, uuid2, callback){
       if(data.Items){
         var messages = [];
         data.Items.forEach(function(item){
-          messages.push({timestamp: item.timestamp, text: item.text});
+          messages.push({timestamp: item.timestamp,
+                         sender: item.sender,
+                         receiver: item.receiver,
+                         msg: item.msg});
         });
         callback(false, {parts:parts, messages:messages});
       }
@@ -221,60 +226,19 @@ function get_conversation(uuid1, uuid2, callback){
 function send_message(sender, parts, text, callback){
   const timestamp = new Date().getTime();
 
-/*  
-  var error_happened = false;
-  var error_msg = '';
-
-  // Update all non-sender parts so they
-  // have the sender as contact
-  // (sender already knows the other parts)
-  // jsrmalvarez: TODO: optimize
-
-  parts.forEach(function(part){
-    if(part != sender){
-
-      var update_params = {
-          Key: part,
-          TableName: USERS_TABLE_NAME,
-          UpdateExpression:
-            'set #contacts = list_append(if_not_exists(#contacts, :empty_list), :new_contact)',
-          ConditionExpression:
-            'not contains(#contacts, :new_contact_str)',
-          ExpressionAttributeNames: {
-            '#contacts': 'contacts'
-          },
-          ExpressionAttributeValues: {
-            ':new_contact': [sender],
-            ':new_contact_str': sender,
-            ':empty_list': []
-          },
-      };
-
-      docClient.update(update_params, function(err, data) {
-          if (err) {
-            error_happened = true;
-            error_msg = error_msg + JSON.stringify(err);
-            console.log(`-- Update error: ${error_msg}`);
-          } 
-          else{ 
-            console.log("-- Data:");
-            console.log(util.inspect(data));
-          }
-      });
-    }
-  });
-*/
-
   // Record new message
   var key = generate_parts_key(parts[0], parts[1]);
+  var receiver = parts[0] == sender ? parts[1] : parts[0];
 
   var params = {
-    TableName: CHATS_TABLE_NAME,
+    TableName: MESSAGES_TABLE_NAME,
     Item:{
-      "parts" : key,
+      "uuid" : key,
       "timestamp": timestamp,
       "sender" : sender,
-      "text" : text
+      "receiver": receiver,
+      "receiver_ack": false,
+      "msg": {"text" : text}
     }
   };
 
@@ -289,6 +253,53 @@ function send_message(sender, parts, text, callback){
   });
 }
 
+function check_for_new_messages(receiver_uuid, callback){
+
+  const MESSAGE_LIMIT = 25;
+
+  var params = {
+      TableName:MESSAGES_TABLE_NAME,
+      IndexName:MESSAGES_TABLE_RECEIVER_INDEX,
+      KeyConditionExpression: 'receiver = :receiver and receiver_ack = false',
+      ExpressionAttributeValues: {
+        ':receiver': receiver_uuid,
+      },
+      Limit: MESSAGE_LIMIT + 1
+  };
+
+  docClient.query(params, function(err, data) {
+      if (err) {
+        callback(true, 'Error while checking for msgs' + '\n' + util.inspect(err) );
+      }
+      else {
+        if(data.Items){
+          var map = {};
+          var count = data.Items.length;
+          var more = count > MESSAGE_LIMIT ? true : false;
+
+          if(more){
+            // Discard last one
+            data.Items.pop();
+          }
+
+          data.Items.forEach(function(item){
+            if(map[item.sender]){
+              map[item.sender]++;
+            }
+            else{
+              map[item.sender] = 1;
+            }
+          });
+
+          callback(false, {count:count, more:more , map:map});
+        }
+        else{
+          callback(true, 'Error while checking for msgs.');
+        }
+      }
+  });
+}
+
 
 module.exports = {
   create_new_user: create_new_user,
@@ -296,5 +307,6 @@ module.exports = {
   find_by_uuid : find_by_uuid,
   get_conversation: get_conversation,
   send_message: send_message,
-  running_on_aws : RUNNING_ON_AWS
+  running_on_aws : RUNNING_ON_AWS,
+  check_for_new_messages: check_for_new_messages
 };
