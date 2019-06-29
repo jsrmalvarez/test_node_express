@@ -99,12 +99,12 @@ function process_new_messages(new_messages){
 }
 
 function check_for_new_messages(){
-  //process_new_messages([1,2,3,4,5,6]);
   $.ajax({
     type: 'POST',
-    url: 'user_page/check_for_new_msg',
+    url: 'user_page/check_for_new_messages',
     data: JSON.stringify({uuid:current_user}),
-    dataType: 'json'});
+    contentType: "application/json; charset=utf-8",
+    dataType: 'json'})
           .done(function(response_data){
               if(response_data.error == false){
                 process_new_messages(response_data.data);

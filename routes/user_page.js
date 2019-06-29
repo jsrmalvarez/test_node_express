@@ -75,7 +75,6 @@ router.post('/send_msg', function(req, res, next){
 });
 
 router.post('/check_for_new_messages', function(req, res, next){
-
   if(req.body.uuid){
     var uuid = req.body.uuid;
 

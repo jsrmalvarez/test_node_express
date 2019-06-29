@@ -14,6 +14,7 @@ var USERS_TABLE_EMAIL_INDEX_NAME;
 
 if(RUNNING_ON_AWS){
   MESSAGES_TABLE_NAME = process.env.MESSAGES_TABLE;
+  MESSAGES_TABLE_RECEIVER_INDEX = process.env.MESSAGES_TABLE_RECEIVER_INDEX;
   USERS_TABLE_NAME = process.env.USERS_TABLE;
   USERS_TABLE_EMAIL_INDEX_NAME = process.env.USERS_TABLE_EMAIL_INDEX;
 }
@@ -260,9 +261,10 @@ function check_for_new_messages(receiver_uuid, callback){
   var params = {
       TableName:MESSAGES_TABLE_NAME,
       IndexName:MESSAGES_TABLE_RECEIVER_INDEX,
-      KeyConditionExpression: 'receiver = :receiver and receiver_ack = false',
+      KeyConditionExpression: 'receiver = :receiver and receiver_ack = :receiver_ack',
       ExpressionAttributeValues: {
         ':receiver': receiver_uuid,
+        ':receiver_ack': 0
       },
       Limit: MESSAGE_LIMIT + 1
   };
