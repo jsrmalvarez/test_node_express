@@ -1,9 +1,11 @@
 
 var current_conversation;
 var current_user;
+var current_user_contacts;
 
-function init_user_state(uuid){
+function init_user_state(uuid, contacts_str){
   current_user = uuid;
+  current_user_contacts = JSON.parse(contacts_str);
   check_for_new_messages();
 }
 
@@ -85,6 +87,16 @@ function send_msg(){
   }
 }    
 
+function add_new_contact(uuid){
+
+  // TODO get email
+  var email = 'todo@bla.com';
+  // TODO Update current_user_contacts
+  // TODO update database
+
+  $('#contact_list').prepend(`<li><a href="#" onclick="load_conv(${current_user}, ${uuid})">${email}</a></li>`);
+}
+
 function process_new_messages(new_messages){
   var count = new_messages.count;
   var map = new_messages.map;
@@ -95,6 +107,16 @@ function process_new_messages(new_messages){
   }
   else{
     $('#new_messages_notification').text(`You have no new messages`);
+  }
+
+  if(current_user_contacts){
+    for(var sender in map){
+      var known_contacts = 
+        current_user_contacts.filter(function(contact){return contact.uuid === sender});
+      if(known_contacts.length == 0){
+        add_new_contact(sender);
+      }
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 extends layout
 
 block body
-  body(onload="init_user_state('#{uuid}')")
+  body(onload="init_user_state('#{uuid}', '#{contacts_str}')")
     block content
       div.top
         p Welcome #{username}
@@ -21,7 +21,7 @@ block body
             div.row
               div.col-lg-6
                 h3 Contacts:
-                ul.list-unstyled_components
+                ul.list-unstyled_components(id="contact_list")
                   each contact in contacts
                     li
                       a(href="#" onclick="load_conv('#{uuid}', '#{contact.uuid}')") #{contact.email}

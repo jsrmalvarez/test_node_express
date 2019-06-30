@@ -30,7 +30,8 @@ router.get('/', function(req, res, next) {
     && req.user.contacts){
     res.render('user_page', {username: req.user.email,
                              uuid: req.user.uuid,
-                             contacts: req.user.contacts});
+                             contacts: req.user.contacts,
+                             contacts_str: JSON.stringify(req.user.contacts)});
   }
   else{
     //res.render('user_page', {username: 'you are NOT LOGGED IN'});
