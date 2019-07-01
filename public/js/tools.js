@@ -89,12 +89,34 @@ function send_msg(){
 
 function add_new_contact(uuid){
 
-  // TODO get email
-  var email = 'todo@bla.com';
-  // TODO Update current_user_contacts
-  // TODO update database
+  // Get email from uuid
+  $.ajax({
+    type: 'POST',
+    url: 'user_page/find_by_uuid',
+    data: JSON.stringify({uuid:uuid}),
+    contentType: "application/json; charset=utf-8",
+    dataType: 'json'})
+          .done(function(response_data){
+              if(response_data.error == false){
+                if(response_data.data.user_found){
+                  if(response_data.data.user){
+                    var email = response_data.data.user.email;
+                    // Update current_user_contacts
+                    if(current_user_contacts.length == 0){
+                      $("contact_list").empty();
+                    }
+                    current_user_contacts.unshift(response_data.data.user);
 
-  $('#contact_list').prepend(`<li><a href="#" onclick="load_conv(${current_user}, ${uuid})">${email}</a></li>`);
+                    // TODO update database
+
+                    $('#contact_list')
+                      .prepend(`<li><a href="#" onclick="load_conv('${current_user}','${uuid}')">${email}</a></li>`);
+                  }
+                }
+              }
+          })
+          .fail(function(jqXHR, textStatus, errorThrown) {display_error()});
+  
 }
 
 function process_new_messages(new_messages){

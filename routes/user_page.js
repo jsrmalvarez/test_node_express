@@ -88,6 +88,28 @@ router.post('/check_for_new_messages', function(req, res, next){
   
 });
 
+router.post('/find_by_uuid', function(req, res, next){
+  if(req.body.uuid){
+    var uuid = req.body.uuid;
+
+    users_api.find_by_uuid(uuid, function(err, data){
+          if(err){
+            res.send({error:true});
+          }
+          else{
+            if(data.user_found){
+              res.send({error:false, data:{user_found:true,
+                                           user:{ uuid: data.user.uuid,
+                                                 email: data.user.email}}});
+            }
+            else{
+              res.send({error:false, data:{user_found:false}});
+            }
+          }
+        });
+  }
+});
+
 router.get('/logout', function(req, res){
   req.logout();
   res.redirect('/');
