@@ -126,3 +126,13 @@ a {
         margin-right: 0;
     }
 }
+
+
+/* Conversation */
+.conversation_me {
+  background-color: lightgreen;
+}
+
+.conversation_other{
+  background-color: white;
+}

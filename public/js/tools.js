@@ -9,12 +9,20 @@ function init_user_state(uuid, contacts_str){
   check_for_new_messages();
 }
 
+function render_msg(message_obj){
+  var class_name = 'conversation_other';
+  if(message_obj.sender == current_user){
+    class_name = 'conversation_me';
+  }
+  return `<p class="${class_name}">${message_obj.msg.text}</p>`;
+}
+
 function prepend_conv_msg(message_obj){
-  $("#conversation" ).prepend(`<p>${message_obj.msg.text}</p>`);
+  $("#conversation" ).prepend(render_msg(message_obj));
 }
 
 function append_conv_msg(message_obj){
-  $("#conversation" ).append(`<p>${message_obj.msg.text}</p>`);
+  $("#conversation" ).append(render_msg(message_obj));
 }
 
 function display_conv(conv){
