@@ -303,6 +303,33 @@ function check_for_new_messages(receiver_uuid, callback){
 }
 
 
+function add_contact(uuid, contact, callback){
+
+
+  var params = {
+    TableName: USERS_TABLE_NAME,
+    Key:{
+      "uuid" : uuid,
+    },
+    UpdateExpression: 'set contacts = list_append(contacts, :new_contact_set)',
+    ConditionExpression: 'not contains(contacts, :new_contact)',
+    ExpressionAttributeValues: {
+      ':new_contact' : contact,
+      ':new_contact_set' : [contact]
+    }
+  };
+
+
+  docClient.update(params, function(err, data) {
+    if(err){
+      callback(true, data);
+    }
+    else{
+      callback(false, data);
+    }
+  });
+}
+
 module.exports = {
   create_new_user: create_new_user,
   try_login: try_login,
@@ -310,5 +337,6 @@ module.exports = {
   get_conversation: get_conversation,
   send_message: send_message,
   running_on_aws : RUNNING_ON_AWS,
-  check_for_new_messages: check_for_new_messages
+  check_for_new_messages: check_for_new_messages,
+  add_contact: add_contact
 };

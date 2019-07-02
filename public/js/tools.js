@@ -87,6 +87,19 @@ function send_msg(){
   }
 }    
 
+
+function post_new_contact(contact){
+  $.ajax({
+    type: 'POST',
+    url: 'user_page/add_contact',
+    data: JSON.stringify({uuid:current_user, contact:contact}),
+    contentType: "application/json; charset=utf-8",
+    dataType: 'json'})
+          .done(function(response_data){
+          })
+          .fail(function(jqXHR, textStatus, errorThrown) {display_error()});
+}
+
 function add_new_contact(uuid){
 
   // Get email from uuid
@@ -103,14 +116,13 @@ function add_new_contact(uuid){
                     var email = response_data.data.user.email;
                     // Update current_user_contacts
                     if(current_user_contacts.length == 0){
-                      $("contact_list").empty();
+                      $('#contact_list').empty();
                     }
                     current_user_contacts.unshift(response_data.data.user);
 
-                    // TODO update database
-
                     $('#contact_list')
                       .prepend(`<li><a href="#" onclick="load_conv('${current_user}','${uuid}')">${email}</a></li>`);
+                    post_new_contact(response_data.data.user);
                   }
                 }
               }

@@ -110,6 +110,23 @@ router.post('/find_by_uuid', function(req, res, next){
   }
 });
 
+router.post('/add_contact', function(req, res, next){
+  if(req.body.uuid && req.body.contact){
+    var uuid = req.body.uuid;
+    var contact = req.body.contact;
+
+    users_api.add_contact(uuid, contact, function(err, data){
+      if(err){
+          res.send({error:true});
+      }
+      else{
+          res.send({error:false});
+      }
+    });
+    
+   }
+});
+
 router.get('/logout', function(req, res){
   req.logout();
   res.redirect('/');
