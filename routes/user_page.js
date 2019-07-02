@@ -61,14 +61,19 @@ router.post('/send_msg', function(req, res, next){
 
   if(   req.body.sender
      && req.body.parts
-     && req.body.text){
+     && req.body.msg){
     var parts = req.body.parts;
     var sender = req.body.sender;
-    var text = req.body.text;
+    var msg= req.body.msg;
 
-    users_api.send_message(sender, parts, text,
+    users_api.send_message(sender, parts, msg,
                            function(err,data){
-                             res.send({error:err, data:data});
+                             if(!err){
+                               res.send({error:err, data:data});
+                             }
+                             else{
+                               res.send({error:true});
+                             }
                            });
   }
 

@@ -224,34 +224,41 @@ function get_conversation(uuid1, uuid2, callback){
   });
 }
 
-function send_message(sender, parts, text, callback){
+function send_message(sender, parts, msg, callback){
   const timestamp = new Date().getTime();
 
   // Record new message
   var key = generate_parts_key(parts[0], parts[1]);
   var receiver = parts[0] == sender ? parts[1] : parts[0];
 
-  var params = {
-    TableName: MESSAGES_TABLE_NAME,
-    Item:{
-      "uuid" : key,
-      "timestamp": timestamp,
-      "sender" : sender,
-      "receiver": receiver,
-      "receiver_ack": false,
-      "msg": {"text" : text}
-    }
-  };
+  if(msg.text){
+    var text = msg.text;
+
+    var params = {
+      TableName: MESSAGES_TABLE_NAME,
+      Item:{
+        "uuid" : key,
+        "timestamp": timestamp,
+        "sender" : sender,
+        "receiver": receiver,
+        "receiver_ack": 0,
+        "msg": {"text" : text}
+      }
+    };
 
 
-  docClient.put(params, function(err, data) {
-    if(err){
-      callback(true, data);
-    }
-    else{
-      callback(false, data);
-    }
-  });
+    docClient.put(params, function(err, data) {
+      if(err){
+        callback(true, err);
+      }
+      else{
+        callback(false, data);
+      }
+    });
+  }
+  else{
+    callback(true);
+  }
 }
 
 function check_for_new_messages(receiver_uuid, callback){
