@@ -53,7 +53,7 @@ passport.deserializeUser(function(uuid, done) {
                          email:'test@bla.com'}]});
   }
   else{
-    users_api.find_by_uuid(uuid, function(err, data){
+    users_api.find_by_uuid(uuid, {include_contacts:true}, function(err, data){
       if(err){
         done(err);
       }

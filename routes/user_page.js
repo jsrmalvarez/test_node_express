@@ -97,7 +97,10 @@ router.post('/find_by_uuid', function(req, res, next){
   if(req.body.uuid){
     var uuid = req.body.uuid;
 
-    users_api.find_by_uuid(uuid, function(err, data){
+
+    // CUIDADO: find_by_uuid puede devolver los contactos de un usuario.
+    // cuando se llama desde fuera con un post, no debe incluirlos.
+    users_api.find_by_uuid(uuid, {include_contacts:false}, function(err, data){
           if(err){
             res.send({error:true});
           }

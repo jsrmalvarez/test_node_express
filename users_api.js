@@ -137,15 +137,25 @@ function try_login(email, password, callback){
   });
 }
 
-function find_by_uuid(uuid, callback){
+function find_by_uuid(uuid, options, callback){
+  if(typeof callback === 'undefined'){
+    callback = options;
+    options = {include_contacts: false};
+  }
 
   var params = {
       TableName:USERS_TABLE_NAME,
-      ProjectionExpression:'email,contacts',
       Key:{
           "uuid": uuid
       }
   };
+
+  if(options.include_contacts){
+      params.ProjectionExpression = 'email,contacts';
+  }
+  else{
+      params.ProjectionExpression = 'email';
+  }
 
   docClient.get(params, function(err, data) {
       if (err) {
@@ -159,10 +169,18 @@ function find_by_uuid(uuid, callback){
           && data.Item.contacts){
           var email = data.Item.email;
           var contacts = data.Item.contacts;
+          var user;
+          if(options.include_contacts){
+            user = {email:email,
+                    uuid:uuid,
+                    contacts:contacts}
+          }
+          else{
+            user = {email:email,
+                    uuid:uuid}
+          }
           callback(false, {user_found: true,
-                           user: {email:email,
-                                  uuid:uuid,
-                                  contacts:contacts}});
+                           user: user});
         }
         else{
           callback(false, {user_found: false});
