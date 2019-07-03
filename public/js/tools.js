@@ -108,6 +108,10 @@ function post_new_contact(contact){
           .fail(function(jqXHR, textStatus, errorThrown) {display_error()});
 }
 
+function update_contact(known_contact, new_msg_count){
+  $(`#${known_contact}>span.msg_count`).text(new_msg_count);
+}
+
 function add_new_contact(uuid, new_msg_count){
 
   // Get email from uuid
@@ -129,7 +133,12 @@ function add_new_contact(uuid, new_msg_count){
                     current_user_contacts.unshift(response_data.data.user);
 
                     $('#contact_list')
-                      .prepend(`<li><a href="#" onclick="load_conv('${current_user}','${uuid}')">${email}</a> (${new_msg_count})</li>`);
+                      .prepend(`<li id="${uuid}">\
+                                  <a href="#"\
+                                     onclick="load_conv('${current_user}','${uuid}')">${email}</a>\
+                                     <span class="msg_count">(${new_msg_count})</span></li>`);
+
+                    // Update database
                     post_new_contact(response_data.data.user);
                   }
                 }
@@ -156,11 +165,13 @@ function process_new_messages(new_messages){
       var known_contacts = 
         current_user_contacts.filter(function(contact){return contact.uuid === sender});
       if(known_contacts.length == 0){
-        add_new_contact(sender, map[sender]);
+        var new_msg_count = map[sender];
+        add_new_contact(sender, new_msg_count);
       }
       else{
-        known_contacts 
-        update_contact(sender, map[sender]);
+        var known_contact = sender
+        var new_msg_count = map[sender];
+        update_contact(known_contact, new_msg_count);
       }
     }
   }
